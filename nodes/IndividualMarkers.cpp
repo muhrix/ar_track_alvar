@@ -523,7 +523,7 @@ int main(int argc, char *argv[])
   ros::Duration(1.0).sleep();
   ros::spinOnce();	
 	 
-  ROS_INFO ("Subscribing to image topic %d", argc);
+  ROS_INFO_STREAM ("Subscribing to image topic " << cam_image_topic);
   cloud_sub_ = n.subscribe(cam_image_topic, 1, &getPointCloudCallback);
 
   //ros::spin ();

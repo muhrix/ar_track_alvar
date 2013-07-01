@@ -8,4 +8,6 @@
 *bin
 *~
 src/ar_track_alvar
-
+cfg/cpp/
+cfg/Params.cfgc
+docs/
