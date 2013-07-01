@@ -57,7 +57,7 @@
 
 #include <opencv2/core/core.hpp>
 
-#include <LinearMath/btMatrix3x3.h>
+#include <tf/LinearMath/Matrix3x3.h>
 
 namespace ar_track_alvar
 {
@@ -92,12 +92,12 @@ extractOrientation (const pcl::ModelCoefficients& coeffs,
                     const ARPoint& p3, const ARPoint& p4,
                     geometry_msgs::Quaternion &retQ);
 
-// Like extractOrientation except return value is a btMatrix3x3
+// Like extractOrientation except return value is a tf::Matrix3x3
 int
 extractFrame (const pcl::ModelCoefficients& coeffs,
               const ARPoint& p1, const ARPoint& p2,
               const ARPoint& p3, const ARPoint& p4,
-              btMatrix3x3 &retmat);
+              tf::Matrix3x3 &retmat);
 
 
 // Return the centroid (mean) of a point cloud

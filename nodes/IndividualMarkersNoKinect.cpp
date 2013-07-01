@@ -106,12 +106,12 @@ void getCapCallback (const sensor_msgs::ImageConstPtr & image_msg)
 				double qz = p.quaternion[3];
 				double qw = p.quaternion[0];
 
-				btQuaternion rotation (qx,qy,qz,qw);
-      			btVector3 origin (px,py,pz);
-      			btTransform t (rotation, origin);
-				btVector3 markerOrigin (0, 0, 0);
-				btTransform m (btQuaternion::getIdentity (), markerOrigin);
-				btTransform markerPose = t * m; // marker pose in the camera frame
+				tf::Quaternion rotation (qx,qy,qz,qw);
+      			tf::Vector3 origin (px,py,pz);
+      			tf::Transform t (rotation, origin);
+				tf::Vector3 markerOrigin (0, 0, 0);
+				tf::Transform m (tf::Quaternion::getIdentity (), markerOrigin);
+				tf::Transform markerPose = t * m; // marker pose in the camera frame
 
 				//Publish the transform from the camera to the marker		
 				std::string markerFrame = "ar_marker_";

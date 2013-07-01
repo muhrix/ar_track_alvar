@@ -20,6 +20,7 @@
   <depend package="resource_retriever" />
   <depend package="cv_bridge" />
   <depend package="pcl_ros"/>
+  <depend package="dynamic_reconfigure"/>
   <rosdep name="eigen" />
 
 </package>

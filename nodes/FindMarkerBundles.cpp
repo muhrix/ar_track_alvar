@@ -62,7 +62,8 @@
 #include <pcl/filters/extract_indices.h>
 #include <boost/lexical_cast.hpp>
 
-#include <LinearMath/btMatrix3x3.h>
+#include <tf/transform_datatypes.h>
+#include <tf/LinearMath/Matrix3x3.h>
 #include <Eigen/Core>
 #include <ar_track_alvar/kinect_filtering.h>
 #include <ar_track_alvar/medianFilter.h>
@@ -162,7 +163,7 @@ void draw3dPoints(ARCloud::Ptr cloud, string frame, int color, int id, double ra
 }
 
 
-void drawArrow(gm::Point start, btMatrix3x3 mat, string frame, int color, int id)
+void drawArrow(gm::Point start, tf::Matrix3x3 mat, string frame, int color, int id)
 {
   visualization_msgs::Marker rvizMarker;
   
@@ -254,7 +255,7 @@ int InferCorners(const ARCloud &cloud, MultiMarkerBundle &master, ARCloud &bund_
         //Grab the precomputed corner coords and correct for the weird Alvar coord system
         for(int j = 0; j < 4; ++j)
         {
-            btVector3 corner_coord = master.rel_corners[index][j];
+            tf::Vector3 corner_coord = master.rel_corners[index][j];
             gm::PointStamped p, output_p;
             p.header.frame_id = marker_frame;
             p.point.x = corner_coord.y()/100.0;  
@@ -353,7 +354,7 @@ int PlaneFitPoseImprovement(int id, const ARCloud &corners_3D, ARCloud::Ptr sele
   succ = ata::extractOrientation(res.coeffs, corners_3D[i1], corners_3D[i2], corners_3D[i3], corners_3D[i4], pose.pose.orientation);
   if(succ < 0) return -1;
 
-  btMatrix3x3 mat; 
+  tf::Matrix3x3 mat; 
   succ = ata::extractFrame(res.coeffs, corners_3D[i1], corners_3D[i2], corners_3D[i3], corners_3D[i4], mat);
   if(succ < 0) return -1;
 
@@ -514,13 +515,13 @@ void makeMarkerMsgs(int type, int id, Pose &p, sensor_msgs::ImageConstPtr image_
   qw = p.quaternion[0];
 
   //Get the marker pose in the camera frame
-  btQuaternion rotation (qx,qy,qz,qw);
-  btVector3 origin (px,py,pz);
-  btTransform t (rotation, origin);  //transform from cam to marker
+  tf::Quaternion rotation (qx,qy,qz,qw);
+  tf::Vector3 origin (px,py,pz);
+  tf::Transform t (rotation, origin);  //transform from cam to marker
 
-  btVector3 markerOrigin (0, 0, 0);
-  btTransform m (btQuaternion::getIdentity (), markerOrigin);
-  btTransform markerPose = t * m;
+  tf::Vector3 markerOrigin (0, 0, 0);
+  tf::Transform m (tf::Quaternion::getIdentity (), markerOrigin);
+  tf::Transform markerPose = t * m;
 
   //Publish the cam to marker transform for each marker
   std::string markerFrame = "ar_marker_";
@@ -679,18 +680,18 @@ void getPointCloudCallback (const sensor_msgs::PointCloud2ConstPtr &msg)
 //p1-->p2 should point in Alvar's pos Y direction
 int makeMasterTransform (const CvPoint3D64f& p0, const CvPoint3D64f& p1,
                          const CvPoint3D64f& p2, const CvPoint3D64f& p3,
-                         btTransform &retT)
+                         tf::Transform &retT)
   {
-    const btVector3 q0(p0.x, p0.y, p0.z);
-    const btVector3 q1(p1.x, p1.y, p1.z);
-    const btVector3 q2(p2.x, p2.y, p2.z);
-    const btVector3 q3(p3.x, p3.y, p3.z);
+    const tf::Vector3 q0(p0.x, p0.y, p0.z);
+    const tf::Vector3 q1(p1.x, p1.y, p1.z);
+    const tf::Vector3 q2(p2.x, p2.y, p2.z);
+    const tf::Vector3 q3(p3.x, p3.y, p3.z);
   
     // (inverse) matrix with the given properties
-    const btVector3 v = (q1-q0).normalized();
-    const btVector3 w = (q2-q1).normalized();
-    const btVector3 n = v.cross(w); 
-    btMatrix3x3 m(v[0], v[1], v[2], w[0], w[1], w[2], n[0], n[1], n[2]);
+    const tf::Vector3 v = (q1-q0).normalized();
+    const tf::Vector3 w = (q2-q1).normalized();
+    const tf::Vector3 n = v.cross(w); 
+    tf::Matrix3x3 m(v[0], v[1], v[2], w[0], w[1], w[2], n[0], n[1], n[2]);
     m = m.inverse();
     
     //Translate to quaternion
@@ -707,19 +708,19 @@ int makeMasterTransform (const CvPoint3D64f& p0, const CvPoint3D64f& p1,
     Eigen::Quaternion<float> eig_quat(eig_m);
     
     // Translate back to bullet
-    btScalar ex = eig_quat.x();
-    btScalar ey = eig_quat.y();
-    btScalar ez = eig_quat.z();
-    btScalar ew = eig_quat.w();
-    btQuaternion quat(ex,ey,ez,ew);
+    tfScalar ex = eig_quat.x();
+    tfScalar ey = eig_quat.y();
+    tfScalar ez = eig_quat.z();
+    tfScalar ew = eig_quat.w();
+    tf::Quaternion quat(ex,ey,ez,ew);
     quat = quat.normalized();
     
     double qx = (q0.x() + q1.x() + q2.x() + q3.x()) / 4.0;
     double qy = (q0.y() + q1.y() + q2.y() + q3.y()) / 4.0;
     double qz = (q0.z() + q1.z() + q2.z() + q3.z()) / 4.0;
-    btVector3 origin (qx,qy,qz);
+    tf::Vector3 origin (qx,qy,qz);
     
-    btTransform tform (quat, origin);  //transform from master to marker
+    tf::Transform tform (quat, origin);  //transform from master to marker
     retT = tform;
     
     return 0;
@@ -731,7 +732,7 @@ int makeMasterTransform (const CvPoint3D64f& p0, const CvPoint3D64f& p1,
 int calcAndSaveMasterCoords(MultiMarkerBundle &master)
 {
     int mast_id = master.master_id;
-    std::vector<btVector3> rel_corner_coords;
+    std::vector<tf::Vector3> rel_corner_coords;
     
     //Go through all the markers associated with this bundle
     for (size_t i=0; i<master.marker_indices.size(); i++){
@@ -745,7 +746,7 @@ int calcAndSaveMasterCoords(MultiMarkerBundle &master)
         }
         
         //Use them to find a transform from the master frame to the child frame
-        btTransform tform; 
+        tf::Transform tform; 
         makeMasterTransform(mark_corners[0], mark_corners[1], mark_corners[2], mark_corners[3], tform);
     
         //Finally, find the coords of the corners of the master in the child frame
@@ -756,8 +757,8 @@ int calcAndSaveMasterCoords(MultiMarkerBundle &master)
             double py = corner_coord.y;
             double pz = corner_coord.z;
         
-            btVector3 corner_vec (px, py, pz);
-            btVector3 ans = (tform.inverse()) * corner_vec;
+            tf::Vector3 corner_vec (px, py, pz);
+            tf::Vector3 ans = (tform.inverse()) * corner_vec;
             rel_corner_coords.push_back(ans);
         }
         
