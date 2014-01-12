@@ -11,12 +11,15 @@ find_package(catkin COMPONENTS
         genmsg
         roscpp
         tf
+        tf2
         image_transport
         resource_retriever
         cv_bridge
         pcl_ros
+        pcl_conversions
         message_generation
         ${MSG_DEPS}
+        dynamic_reconfigure
         REQUIRED)
 
 find_package(Eigen REQUIRED)
@@ -30,6 +33,9 @@ set(MSG_FILES AlvarMarker.msg AlvarMarkers.msg)
 add_message_files(DIRECTORY msg FILES ${MSG_FILES})
 generate_messages(DEPENDENCIES ${MSG_DEPS})
 
+# dynamic reconfigure support
+generate_dynamic_reconfigure_options(cfg/Params.cfg)
+
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ar_track_alvar
@@ -37,6 +43,7 @@ catkin_package(
         std_msgs
         roscpp
         tf
+        tf2
         message_runtime
         image_transport
         sensor_msgs
@@ -45,6 +52,8 @@ catkin_package(
         resource_retriever
         cv_bridge
         pcl_ros
+        pcl_conversions
+        dynamic_reconfigure
 )
 
 include_directories(include 
